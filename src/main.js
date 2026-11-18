@@ -1,9 +1,10 @@
 import { observe, enabledActions, subscribe, setFaultInjection, isFaultInjectionEnabled } from './task-app.js';
 import { taskDemo } from './adapter.js';
+import { installParentAppHost } from './app-host.js';
 
-// A console hook for the live preview. A future Edit bridge can hand this
-// adapter a MessagePort without re-importing the app in a different runtime.
+// The console and optional lab bridge share this live application instance.
 Object.defineProperty(window, 'tlaTaskDemo', { value: taskDemo });
+if (new URLSearchParams(location.search).get('bridge') === 'parent') installParentAppHost(taskDemo);
 
 const $ = id => document.getElementById(id);
 const buttons = [...document.querySelectorAll('[data-action]')];

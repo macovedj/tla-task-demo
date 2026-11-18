@@ -1,0 +1,14 @@
+{
+  "upstream": "https://github.com/fabracht/tla-rs",
+  "version": "0.24.11",
+  "commit": "9438572f8278df75427460597ca48b0e0026684c",
+  "bindgenVersion": "0.2.130",
+  "rustc": "rustc 1.98.0-nightly (31a9463c6 2026-05-25)",
+  "target": "wasm32-unknown-unknown",
+  "patchSha256": "1e8f1ed822b9ed9011c54c71ce61ed523b98b9367ceb177327bd621b432b8a50",
+  "lockSha256": "c4647c4e2e9be850fe800ec4c2c1988a5eec2c1f346f718fe044cd31d94b36c1",
+  "artifacts": {
+    "tla_checker.js": "b55d632154f40b1a95a1d6c5553201b1ccdd6de5ff1edf8131fc62279fa53fb0",
+    "tla_checker_bg.wasm": "278507e2096e6be0b30e945fdb1f21e9296b428480303455536ccd953a98be1c"
+  }
+}

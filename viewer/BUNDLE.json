@@ -1,0 +1,28 @@
+{
+  "source": "TLA+ State Explorer",
+  "mode": "linked application",
+  "sha256": {
+    "app-bridge.mjs": "451cfb8e39e3828b1b2c1be8c5199215dfe8e8477e41c74228e1078a1f660fda",
+    "engine-client.mjs": "65dfd74479fe9dab085148e06ff3f38d4249bc989aebe1c1bd052d6f84d9d128",
+    "engine-worker.mjs": "42f3f17df5986c52151d5773854045f2d6980bb5bd7445e3cabb9cc1a456beb9",
+    "lib/app-conformance.mjs": "f61fc0699a4a34f223e6b40f8f5ad18d971a7d324421977a19ded8b586401175",
+    "lib/browser-engine.mjs": "9f42a0e4c41853ced7597f544358e8d4bfb269827fd273341c53f65b8972ec8a",
+    "lib/tlc-graph.mjs": "6ab800c1ebe9fc0779a0948d47155ea8a9e8b079dafa416f245640d59099a1c5",
+    "linked-app.css": "95c64d56894bf983ae74b042f71db50bbb9c4edd3ca4e8f009f3747f594d4ec0",
+    "linked-app.html": "41196688498cdd591d491ff774c38db1260cd90326b9cca280a97b6e26d03ddc",
+    "linked-app.mjs": "74a8a7e0ba4a0f2d13f96bc54c5f3168796317708aa4477aa961a38c767ca4b0",
+    "state-view.css": "a9d1d11825986c8a35bc9ef8bdc68de403428f0b9c793cfa35806372de1f0478",
+    "state-view.mjs": "d213f2b80e971cbd33765443f52eb28d3b423035a08e1a1f92937592421b73b3",
+    "trace-simulator.css": "89ae36c61c7b05b4d64d39b9ac8e074c34e62775c8154f43dd895efe1110a7ef",
+    "trace-simulator.mjs": "4c61d570364e53876f6347a488bb2ed2f078d4ca0754886a73ac787401d8c6a4",
+    "vendor/tla-checker/build-info.json": "9e2019de10382f78d30b054fbea75790a06550d60b92c1f0b6a375b6835778ee",
+    "vendor/tla-checker/LICENSE-APACHE": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+    "vendor/tla-checker/LICENSE-MIT": "e1ab919ecc46f433bd0fc3c10d1627b6c7738d39b1b4d597b1433ff4fbf4f5d4",
+    "vendor/tla-checker/PROVENANCE.md": "f78f50266079d30e4770cd2ac66f7b4598850e3573f2a531768341bf4ee0e247",
+    "vendor/tla-checker/tla_checker_bg.wasm": "278507e2096e6be0b30e945fdb1f21e9296b428480303455536ccd953a98be1c",
+    "vendor/tla-checker/tla_checker_bg.wasm.d.ts": "c3b437c443b372ad0b78d4b0cb1353d544e1d581b172977052967284070bd20d",
+    "vendor/tla-checker/tla_checker.d.ts": "ed9e3da8d1e3296d012dc27a632c7bee12661714bc7a29e9c2c35e2a252f9918",
+    "vendor/tla-checker/tla_checker.js": "b55d632154f40b1a95a1d6c5553201b1ccdd6de5ff1edf8131fc62279fa53fb0",
+    "vendor/tla-checker/wasm-bytes.mjs": "f9c79d360b302e7df49d3f6d00ff5d1ea7966d7b42eba08525ff780311057d6e"
+  }
+}

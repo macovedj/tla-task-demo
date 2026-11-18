@@ -13,12 +13,21 @@ Use Node.js 20 or newer. There are no npm dependencies.
 npm run dev
 ```
 
-Open `http://localhost:3000`. Run the checks with `npm test`.
+Open `http://localhost:3000/lab.html` for the linked app and viewer, or
+`http://localhost:3000` for the app alone. Run the checks with `npm test`.
 
-In edit-test.dev, import this repository, then either open `index.html` as a
-file preview or run `npm run dev` and open the listening-port preview for
-port 3000. File preview still needs an HTTP origin; opening a local `file://`
-URL can block JavaScript modules.
+In edit-test.dev, import this repository and open **`lab.html` as a shared
+file preview**. Both panes then share the project's isolated preview origin.
+Use file preview for this prototype: the private listening-port preview's
+single-document authorization can reject nested frames. A local `file://`
+URL can also block JavaScript modules.
+
+The lab loads `tla-bindings.json`, `model/Task.tla`, and `model/Task.cfg` and
+connects the bundled viewer to the real app in the adjacent pane. An optional
+**Edit project URL** enables links back to the implementation source. Paste
+the editor's project URL, including its `?file=…` path, then choose **Reload
+connection**. Leaving this field empty still allows app execution. Reloading
+the connection reloads both panes and starts a new channel session.
 
 ## Try it
 
@@ -29,8 +38,10 @@ URL can block JavaScript modules.
 - Enable the **Break Complete** toggle to make Complete leave the task `open`.
   A model-driven check should report the expected `done` versus observed
   `open`. The toggle survives reset and is deliberately outside the model.
-- To take another branch, reset the app and replay the desired action prefix.
-  Selecting a previous model state alone does not rewind the running app.
+- Use the linked viewer to choose enabled model actions and compare the
+  expected successor with the app's observed result. To take another branch,
+  restore the app by resetting and replaying the desired prefix. The viewer
+  performs this explicitly; selecting a model state alone cannot rewind an app.
 
 The preview's browser console exposes the same adapter:
 
@@ -54,8 +65,14 @@ action IDs mapped to source functions, observation/reset functions, and the
 adapter entry point. For example, `Complete` maps to
 `src/task-app.js#completeTask`.
 
-This manifest is not yet a supported import format in State Explorer or
-Edit. The cross-app bridge is future work. A runner must call the adapter
-inside the existing preview instance, then compare `observe()` with the
-chosen model successor. Importing a fresh copy into a runner worker would
-exercise a separate application instance.
+The bundled linked viewer implements this experimental contract. It is not
+an Edit extension or a general import format in the standalone explorer.
+The lab transfers a dedicated MessageChannel between verified same-origin
+frames. Only registered actions and matching source bindings may execute;
+each operation independently reads `observe()` afterward. Reloading either
+frame retires its old session and discards queued operations.
+
+The adapter runs inside the visible app instance. No app module is imported
+into the model worker, and no application code is evaluated from the manifest.
+The bridge does not relax Edit's preview sandbox, CSP, or COOP. Selected trace
+comparisons do not establish exhaustive implementation correctness.

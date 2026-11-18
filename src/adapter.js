@@ -9,6 +9,13 @@ const handlers = Object.freeze({
   Delete: deleteTask,
 });
 
+const sourceBinding = handler => Object.freeze({ file: 'src/task-app.js', function: handler.name });
+const bindings = Object.freeze({
+  actions: Object.freeze(Object.fromEntries(Object.entries(handlers).map(([action, handler]) => [action, sourceBinding(handler)]))),
+  observe: sourceBinding(observe),
+  reset: sourceBinding(reset),
+});
+
 export function perform(actionId) {
   if (!Object.hasOwn(handlers, actionId)) {
     throw new Error(`Unknown task action: ${String(actionId)}`);
@@ -20,6 +27,7 @@ export const taskDemo = Object.freeze({
   id: 'tla-task-demo',
   version: 1,
   actions: Object.freeze(Object.keys(handlers)),
+  bindings,
   perform,
   observe,
   reset,
