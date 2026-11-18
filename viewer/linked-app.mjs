@@ -30,7 +30,9 @@ function sourceUrl(binding) {
     const original = url.searchParams.get('file') || '';
     // The supplied model/editor link identifies this checkout's path in Edit.
     const modelPath = connection.manifest.model.module;
-    const prefix = original.endsWith(modelPath) ? original.slice(0, -modelPath.length) : 'code/tla-task-demo/';
+    const relative = [modelPath, connection.manifest.model.config, binding.file, 'lab.html', 'index.html'].find(path => original === path || original.endsWith('/' + path));
+    if (!relative) return null;
+    const prefix = original.slice(0, -relative.length);
     url.search = '';
     url.hash = '';
     url.searchParams.set('file', prefix + binding.file);
@@ -38,11 +40,19 @@ function sourceUrl(binding) {
   } catch { return null; }
 }
 function bindingElement(binding, action) {
-  const url = sourceUrl(binding);
-  const element = document.createElement(url ? 'a' : 'code');
+  const element = document.createElement('a');
   element.textContent = `${action ? action + ' → ' : ''}${binding.file} → ${binding.function}()`;
-  if (url) { element.href = url; element.target = '_blank'; element.rel = 'noopener noreferrer'; }
-  return element;
+  element.href = new URL('../' + binding.file, import.meta.url).href;
+  element.target = '_blank'; element.rel = 'noopener noreferrer';
+  element.title = 'View the implementation source without starting another editor session';
+  const wrapper = document.createElement('span'); wrapper.append(element);
+  const editUrl = sourceUrl(binding);
+  if (editUrl) {
+    const editor = document.createElement('a'); editor.href = editUrl; editor.target = '_blank'; editor.rel = 'noopener noreferrer';
+    editor.textContent = 'Edit ↗'; editor.title = 'Open a separate Edit session; Edit may ask you to switch the active session.';
+    wrapper.append(document.createTextNode(' · '), editor);
+  }
+  return wrapper;
 }
 function showBinding(action) {
   $('last-binding').replaceChildren();
