@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f3ee">
+  <title>One Task · TLA+ demo</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./src/main.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <a class="wordmark" href="./" aria-label="One Task home"><span class="mark" aria-hidden="true">1</span>ONE TASK</a>
+      <span class="eyebrow">AN EDIT + TLA+ EXPERIMENT</span>
+    </header>
+
+    <section class="intro">
+      <p class="eyebrow">SMALL APP. EXPLICIT ACTIONS.</p>
+      <h1>One task.<br>Every possible next step.</h1>
+      <p>Add it, finish it, reopen it, or delete it. Each action has an exported function and a matching TLA+ action.</p>
+    </section>
+
+    <div class="workspace">
+      <section class="card app-card" aria-labelledby="app-heading">
+        <div class="card-heading"><h2 id="app-heading">The application</h2><button class="text-button" id="reset" type="button">Reset app <span aria-hidden="true">↺</span></button></div>
+        <div class="task-stage" aria-live="polite" aria-atomic="true">
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon" aria-hidden="true">+</div>
+            <h3>A clear starting point.</h3>
+            <p>There is no task yet. Add one to begin.</p>
+          </div>
+          <article class="task" id="task" hidden>
+            <span class="task-indicator" id="task-indicator" aria-hidden="true"></span>
+            <div><span class="task-number">TASK / 001</span><h3 id="task-title">Try model-driven testing</h3><p id="task-description">Ready when you are.</p></div>
+          </article>
+        </div>
+        <div class="action-bar" aria-label="Application actions">
+          <button class="action-button" type="button" data-action="Add">Add</button>
+          <button class="action-button" type="button" data-action="Complete">Complete</button>
+          <button class="action-button" type="button" data-action="Reopen">Reopen</button>
+          <button class="action-button delete-button" type="button" data-action="Delete">Delete</button>
+        </div>
+        <div class="app-feedback" id="feedback" role="status">Choose Add to create the task.</div>
+        <p class="action-error" id="action-error" role="alert" hidden></p>
+      </section>
+
+      <aside class="card inspector" aria-labelledby="state-heading">
+        <div class="card-heading"><h2 id="state-heading">Observed state</h2><span class="live-dot" aria-label="Live application state"></span></div>
+        <pre class="state-json" id="observed-state" aria-label="Observed application state">{"status":"absent"}</pre>
+        <div class="state-track" aria-label="Model states">
+          <span data-status="absent">absent</span><span class="state-arrow" aria-hidden="true">→</span><span data-status="open">open</span><span class="state-arrow" aria-hidden="true">⇄</span><span data-status="done">done</span>
+        </div>
+        <p class="inspector-caption">Read from the running app through <code>observe()</code>.</p>
+        <div class="bindings-heading"><h3>Action bindings</h3><code>src/task-app.js</code></div>
+        <dl class="bindings">
+          <div><dt>Add</dt><dd>addTask()</dd></div>
+          <div><dt>Complete</dt><dd>completeTask()</dd></div>
+          <div><dt>Reopen</dt><dd>reopenTask()</dd></div>
+          <div><dt>Delete</dt><dd>deleteTask()</dd></div>
+        </dl>
+      </aside>
+    </div>
+
+    <section class="fault-panel" aria-labelledby="fault-heading">
+      <div><p class="eyebrow">A DELIBERATE BUG</p><h2 id="fault-heading">Give the checker something to catch.</h2><p>When enabled, Complete leaves the task open. The model still expects done.</p></div>
+      <label class="fault-toggle"><input type="checkbox" id="fault-toggle"><span class="switch" aria-hidden="true"></span><span>Break Complete</span></label>
+    </section>
+
+    <footer><span>3 states · 4 actions · No dependencies</span><span>Model and bindings included. Viewer connection is the next step.</span></footer>
+  </main>
+</body>
+</html>
