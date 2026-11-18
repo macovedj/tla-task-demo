@@ -13,6 +13,7 @@ const frames = [
 ];
 let files = null;
 let manifest = null;
+let applicationSources = null;
 let connection = null;
 let retired = false;
 let disposed = false;
@@ -55,7 +56,7 @@ function update() {
   if (disposed) return;
   if (loadingError) { show(loadingError, 'error'); return; }
   if (retired) { show('Connection closed. Use Reload connection to restore both panes.', 'error'); return; }
-  if (!files || !manifest) { show('Loading the project model and bindings…'); return; }
+  if (!files || !manifest || !applicationSources) { show('Loading the project model, bindings, and source…'); return; }
   const waiting = frames.filter(item => !item.ready || !item.loaded).map(item => item.name);
   if (waiting.length) { show(`Waiting for the ${waiting.join(' and ')} pane${waiting.length > 1 ? 's' : ''}…`); return; }
   if (connection) return;
@@ -64,7 +65,7 @@ function update() {
   connection = { session };
   try {
     post(appFrame, { type: 'tla-app-connect', version: VERSION, session }, [channel.port1]);
-    post(viewerFrame, { type: 'tla-viewer-connect', version: VERSION, session, manifest, files, ...(editProjectUrl ? { editProjectUrl } : {}) }, [channel.port2]);
+    post(viewerFrame, { type: 'tla-viewer-connect', version: VERSION, session, manifest, files, applicationSources, ...(editProjectUrl ? { editProjectUrl } : {}) }, [channel.port2]);
     clearTimeout(readyTimer);
     show('Connected · model actions now drive the running app.', 'ready');
   } catch (error) {
@@ -130,16 +131,16 @@ document.getElementById('connection-form').addEventListener('submit', event => {
 });
 
 function projectPath(path) {
-  if (typeof path !== 'string' || !/^[A-Za-z0-9_./-]{1,200}$/.test(path) || path.split('/').some(segment => !segment || segment === '.' || segment === '..')) throw new Error('The binding manifest contains an invalid model path.');
+  if (typeof path !== 'string' || !/^[A-Za-z0-9_./-]{1,200}$/.test(path) || path.split('/').some(segment => !segment || segment === '.' || segment === '..')) throw new Error('The binding manifest contains an invalid project path.');
   const url = new URL(path, rootUrl);
-  if (url.origin !== origin || !url.pathname.startsWith(rootUrl.pathname)) throw new Error('The model path must stay inside this project.');
+  if (url.origin !== origin || !url.pathname.startsWith(rootUrl.pathname)) throw new Error('The file path must stay inside this project.');
   return url;
 }
 async function readText(url, maxBytes) {
   const response = await fetch(url, { cache: 'no-store', signal: loading.signal });
   if (!response.ok) throw new Error(`Could not load ${url.pathname} (${response.status}).`);
   const text = await response.text();
-  if (new TextEncoder().encode(text).length > maxBytes) throw new Error('A project model file exceeds the demo size limit.');
+  if (new TextEncoder().encode(text).length > maxBytes) throw new Error('A project file exceeds the demo size limit.');
   return text;
 }
 const loadTimeout = setTimeout(() => loading.abort(), 20000);
@@ -149,12 +150,26 @@ async function loadProject() {
     if (!manifest || manifest.version !== VERSION || !manifest.model) throw new Error('The binding manifest version is not supported.');
     const paths = [manifest.model.module, manifest.model.config];
     const urls = paths.map(projectPath);
-    files = await Promise.all(urls.map(async (url, index) => {
+    const loadedFiles = await Promise.all(urls.map(async (url, index) => {
       const name = paths[index].split('/').at(-1);
       if (!/^[A-Za-z_][A-Za-z0-9_]*\.(tla|cfg)$/.test(name)) throw new Error('The model needs simple .tla and .cfg filenames.');
       return { name, content: await readText(url, 1024 * 1024) };
     }));
-    if (!files[0].name.endsWith('.tla') || !files[1].name.endsWith('.cfg')) throw new Error('The model manifest needs a .tla module and a .cfg configuration.');
+    if (!loadedFiles[0].name.endsWith('.tla') || !loadedFiles[1].name.endsWith('.cfg')) throw new Error('The model manifest needs a .tla module and a .cfg configuration.');
+    if (!manifest.actions || typeof manifest.actions !== 'object' || Array.isArray(manifest.actions)) throw new Error('The binding manifest needs an action registry.');
+    const sourcePaths = [...new Set([...Object.values(manifest.actions), manifest.observe, manifest.reset].map(binding => binding?.file))];
+    if (sourcePaths.length > 100) throw new Error('The binding manifest exceeds the 100 source file limit.');
+    const loadedSources = [];
+    let sourceBytes = 0;
+    for (const path of sourcePaths) {
+      const content = await readText(projectPath(path), 1024 * 1024);
+      sourceBytes += new TextEncoder().encode(content).length;
+      if (sourceBytes > 3 * 1024 * 1024) throw new Error('The application sources exceed the 3 MiB total limit.');
+      loadedSources.push({ path, content });
+    }
+    // Publish readiness only after both model files and every bound source are present.
+    applicationSources = loadedSources;
+    files = loadedFiles;
     update();
   } catch (error) {
     if (disposed) return;

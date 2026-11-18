@@ -22,12 +22,16 @@ Use file preview for this prototype: the private listening-port preview's
 single-document authorization can reject nested frames. A local `file://`
 URL can also block JavaScript modules.
 
-The lab loads `tla-bindings.json`, `model/Task.tla`, and `model/Task.cfg` and
-connects the bundled viewer to the real app in the adjacent pane. An optional
-**Edit project URL** enables links back to the implementation source. Paste
+The lab loads `tla-bindings.json`, the model, and the bound application source
+files, then connects the bundled viewer to the real app in the adjacent pane.
+The viewer's source buttons open a read-only source view inside that pane.
+They work without an Edit project URL and keep the app connection alive.
+
+An optional **Edit project URL** supplies a secondary editor deep link. Paste
 the editor's project URL, including its `?file=…` path, then choose **Reload
-connection**. Leaving this field empty still allows app execution. Reloading
-the connection reloads both panes and starts a new channel session.
+connection**. Opening another Edit session may require taking ownership of
+the workspace. Reloading the connection reloads both panes and starts a new
+channel session.
 
 ## Try it
 

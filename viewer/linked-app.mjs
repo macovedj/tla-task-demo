@@ -40,19 +40,21 @@ function sourceUrl(binding) {
   } catch { return null; }
 }
 function bindingElement(binding, action) {
-  const element = document.createElement('a');
+  const element = document.createElement('button'); element.type = 'button'; element.className = 'source-button';
   element.textContent = `${action ? action + ' → ' : ''}${binding.file} → ${binding.function}()`;
-  element.href = new URL('../' + binding.file, import.meta.url).href;
-  element.target = '_blank'; element.rel = 'noopener noreferrer';
-  element.title = 'View the implementation source without starting another editor session';
-  const wrapper = document.createElement('span'); wrapper.append(element);
-  const editUrl = sourceUrl(binding);
-  if (editUrl) {
-    const editor = document.createElement('a'); editor.href = editUrl; editor.target = '_blank'; editor.rel = 'noopener noreferrer';
-    editor.textContent = 'Edit ↗'; editor.title = 'Open a separate Edit session; Edit may ask you to switch the active session.';
-    wrapper.append(document.createTextNode(' · '), editor);
-  }
-  return wrapper;
+  const source = connection?.applicationSources?.find(file => file.path === binding.file);
+  element.disabled = !source;
+  element.title = source ? 'Read the implementation without leaving this trace' : 'Reload the lab to include implementation source';
+  element.addEventListener('click', () => {
+    if (!source) return;
+    $('implementation-title').textContent = `${binding.file} → ${binding.function}()`;
+    $('implementation-code').textContent = source.content;
+    const editUrl = sourceUrl(binding);
+    $('implementation-edit-link').hidden = !editUrl;
+    $('implementation-edit-url').value = editUrl || '';
+    $('implementation-dialog').showModal();
+  });
+  return element;
 }
 function showBinding(action) {
   $('last-binding').replaceChildren();
@@ -193,6 +195,8 @@ function renderSources() {
   }
 }
 $('recover-app').addEventListener('click', () => selectStep(currentStep));
+$('close-implementation').addEventListener('click', () => $('implementation-dialog').close());
+$('implementation-edit-url').addEventListener('click', event => event.currentTarget.select());
 onAnalyzerState(state => { $('engine-status').textContent = state.status === 'ready' ? 'WASM ready · browser local' : state.message; });
 render();
 

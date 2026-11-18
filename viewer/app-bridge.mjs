@@ -4,6 +4,24 @@ export class AppBridgeError extends Error {
 }
 const failure = (code, message) => new AppBridgeError(code, message);
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const sourceEncoder = new TextEncoder();
+
+function copyApplicationSources(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 100) throw failure('APP_BRIDGE_INVALID', 'Application sources must contain at most 100 files.');
+  const seen = new Set();
+  let totalBytes = 0;
+  return value.map(file => {
+    if (!record(file) || typeof file.path !== 'string' || file.path.length > 200 || !/^[A-Za-z0-9_./-]+$/.test(file.path) || file.path.startsWith('/') || file.path.split('/').some(part => !part || part === '.' || part === '..') || seen.has(file.path) || typeof file.content !== 'string' || file.content.length > 1024 * 1024) {
+      throw failure('APP_BRIDGE_INVALID', 'Application sources need unique relative file paths and bounded text contents.');
+    }
+    seen.add(file.path);
+    const bytes = sourceEncoder.encode(file.content).length;
+    totalBytes += bytes;
+    if (bytes > 1024 * 1024 || totalBytes > 3 * 1024 * 1024) throw failure('APP_BRIDGE_INVALID', 'Application sources exceed the 1 MiB file or 3 MiB total limit.');
+    return {path:file.path,content:file.content};
+  });
+}
 
 function createClient(port, session, timeoutMs, cleanup) {
   let sequence = 0, closed = false, closedError = null;
@@ -83,6 +101,9 @@ export function connectParentApp({window:win = globalThis.window, timeoutMs = 15
         for (const port of ports) port.close?.();
         rejectConnection(failure('APP_BRIDGE_INVALID', 'The application lab sent an invalid connection.'));return;
       }
+      let applicationSources;
+      try { applicationSources = copyApplicationSources(value.applicationSources); }
+      catch (error) { ports[0].close();rejectConnection(error);return; }
       let editProjectUrl;
       if (value.editProjectUrl !== undefined) {
         try {
@@ -98,7 +119,7 @@ export function connectParentApp({window:win = globalThis.window, timeoutMs = 15
         catch { /* The parent may have unloaded. */ }
       });
       settled=true;clearTimeout(timer);
-      resolve({client,manifest:structuredClone(value.manifest),files:value.files.map(file => ({name:file.name,content:file.content})),...(editProjectUrl ? {editProjectUrl} : {})});
+      resolve({client,manifest:structuredClone(value.manifest),files:value.files.map(file => ({name:file.name,content:file.content})),applicationSources,...(editProjectUrl ? {editProjectUrl} : {})});
     };
     const timer = setTimeout(() => rejectConnection(failure('APP_BRIDGE_TIMEOUT', 'The application lab did not connect in time.')), timeoutMs);
     win.addEventListener('message', receive);win.addEventListener('pagehide', unload);
