@@ -1,82 +1,48 @@
-# TLA+ task demo
+# One Task
 
-A small task app with explicit links between TLA+ actions and application
-functions. It has three states (`absent`, `open`, `done`) and five directed
-transitions. The browser runs the real app functions; `observe()` reads their
-current state, and the UI mirrors that state.
+A tiny ordinary web app for trying model-driven testing in Edit. It has three task states and four exported actions. The application contains no TLA+ viewer, model checker, or action-to-model mappings.
 
-## Run
-
-Use Node.js 20 or newer. There are no npm dependencies.
+## Run the app
 
 ```sh
 npm run dev
 ```
 
-Open `http://localhost:3000/lab.html` for the linked app and viewer, or
-`http://localhost:3000` for the app alone. Run the checks with `npm test`.
+The app listens on port 3000. It also works directly in Edit's file preview. Tests need no dependencies:
 
-In edit-test.dev, import this repository and open **`lab.html` as a shared
-file preview**. Both panes then share the project's isolated preview origin.
-Use file preview for this prototype: the private listening-port preview's
-single-document authorization can reject nested frames. A local `file://`
-URL can also block JavaScript modules.
-
-The lab loads `tla-bindings.json`, the model, and the bound application source
-files, then connects the bundled viewer to the real app in the adjacent pane.
-The viewer's source buttons open a read-only source view inside that pane.
-They work without an Edit project URL and keep the app connection alive.
-
-An optional **Edit project URL** supplies a secondary editor deep link. Paste
-the editor's project URL, including its `?file=…` path, then choose **Reload
-connection**. Opening another Edit session may require taking ownership of
-the workspace. Reloading the connection reloads both panes and starts a new
-channel session.
-
-## Try it
-
-- **Add** creates the task, **Complete** marks it done, **Reopen** opens it
-  again, and **Delete** removes it. Only actions enabled in the current state
-  are valid.
-- **Reset** returns the task to `absent`.
-- Enable the **Break Complete** toggle to make Complete leave the task `open`.
-  A model-driven check should report the expected `done` versus observed
-  `open`. The toggle survives reset and is deliberately outside the model.
-- Use the linked viewer to choose enabled model actions and compare the
-  expected successor with the app's observed result. To take another branch,
-  restore the app by resetting and replaying the desired prefix. The viewer
-  performs this explicitly; selecting a model state alone cannot rewind an app.
-
-The preview's browser console exposes the same adapter:
-
-```js
-window.tlaTaskDemo.reset();
-window.tlaTaskDemo.perform("Add");
-window.tlaTaskDemo.perform("Complete");
-window.tlaTaskDemo.observe(); // { status: "done" } when the fault is off
+```sh
+npm test
 ```
 
-## Model and source links
+## Connect the existing TLA+ viewer
 
-In TLA+ State Explorer, choose **Open specification**, select both
-`model/Task.tla` and `model/Task.cfg`, then analyze or start an interactive
-trace. The finite model has three states and five transitions. `TypeOK`
-checks the status domain; detecting the injected fault requires comparing
-each observed result with its expected model successor.
+Open the app preview with `?devBridge=1` to enable its optional development bridge. Open the existing TLA+ State Explorer in a second browser pane in the same Edit project. The viewer can be hosted separately or run as a separate tool in the project; its code does not belong in the application.
 
-`tla-bindings.json` proposes a portable version-1 contract: model paths,
-action IDs mapped to source functions, observation/reset functions, and the
-adapter entry point. For example, `Complete` maps to
-`src/task-app.js#completeTask`.
+In the viewer, choose **Open files → One Task**, open **Application**, discover the running app, and review these mappings before attaching:
 
-The bundled linked viewer implements this experimental contract. It is not
-an Edit extension or a general import format in the standalone explorer.
-The lab transfers a dedicated MessageChannel between verified same-origin
-frames. Only registered actions and matching source bindings may execute;
-each operation independently reads `observe()` afterward. Reloading either
-frame retires its old session and discards queued operations.
+| Model action | File | Function |
+| --- | --- | --- |
+| Add | src/task-app.js | addTask |
+| Complete | src/task-app.js | completeTask |
+| Reopen | src/task-app.js | reopenTask |
+| Delete | src/task-app.js | deleteTask |
+| Observe state | src/task-app.js | observe |
+| Reset application | src/task-app.js | reset |
 
-The adapter runs inside the visible app instance. No app module is imported
-into the model worker, and no application code is evaluated from the manifest.
-The bridge does not relax Edit's preview sandbox, CSP, or COOP. Selected trace
-comparisons do not establish exhaustive implementation correctness.
+The viewer owns these mappings and compares real observations with model states. Rewinding resets the app and replays the selected prefix. Enable **Break Complete** in the app to see a mismatch: the model expects `done`, but the running app remains `open`.
+
+`src/dev-bridge.js` exposes only registered live function references through a dedicated message channel. It does not evaluate source code, import a new application instance, or receive expected model states. It is inactive without the query flag. Reloading either preview requires reconnecting.
+
+The sample `model/Task.tla` and `.cfg` are reference files. The app never loads them.
+
+## Multiple apps in one Edit project
+
+Edit supports independent shells and browser panes:
+
+```text
+:shelltab
+:vterminal
+:vbrowser <url>
+```
+
+Use different ports for separate development servers, for example the app on 3000 and a separate viewer checkout on 4173. To select a running service, open `:vbrowser` without a URL. Two file previews in the project share a preview origin; server previews have separate origins, so the bridge pairs them explicitly.

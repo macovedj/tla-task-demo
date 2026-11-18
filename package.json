@@ -3,12 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A single-task app with explicit TLA+ action bindings for Edit experiments.",
+  "description": "A single-task app with explicit functions and an optional development bridge.",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "test": "node --test tests/*.test.js",
-    "vendor:viewer": "node scripts/package-viewer.mjs"
+    "test": "node --test tests/*.test.js"
   },
   "engines": { "node": ">=20" }
 }

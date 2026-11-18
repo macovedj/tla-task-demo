@@ -1,10 +1,15 @@
-import { observe, enabledActions, subscribe, setFaultInjection, isFaultInjectionEnabled } from './task-app.js';
-import { taskDemo } from './adapter.js';
-import { installParentAppHost } from './app-host.js';
+import { addTask, completeTask, reopenTask, deleteTask, observe, reset, enabledActions, subscribe, setFaultInjection, isFaultInjectionEnabled } from './task-app.js';
+import { installDevBridge } from './dev-bridge.js';
 
-// The console and optional lab bridge share this live application instance.
-Object.defineProperty(window, 'tlaTaskDemo', { value: taskDemo });
-if (new URLSearchParams(location.search).get('bridge') === 'parent') installParentAppHost(taskDemo);
+// Ordinary app functions are shared by the UI and an optional development tool.
+const actionHandlers = { Add: addTask, Complete: completeTask, Reopen: reopenTask, Delete: deleteTask };
+if (new URLSearchParams(location.search).get('devBridge') === '1') {
+  installDevBridge({
+    id: 'one-task',
+    title: 'One Task',
+    modules: { 'src/task-app.js': { addTask, completeTask, reopenTask, deleteTask, observe, reset } },
+  });
+}
 
 const $ = id => document.getElementById(id);
 const buttons = [...document.querySelectorAll('[data-action]')];
@@ -37,8 +42,8 @@ function run(operation) {
   catch (error) { $('action-error').textContent = error.message; $('action-error').hidden = false; }
 }
 
-buttons.forEach(button => button.addEventListener('click', () => run(() => taskDemo.perform(button.dataset.action))));
-$('reset').addEventListener('click', () => run(() => taskDemo.reset()));
+buttons.forEach(button => button.addEventListener('click', () => run(() => actionHandlers[button.dataset.action]())));
+$('reset').addEventListener('click', () => run(reset));
 $('fault-toggle').addEventListener('change', event => run(() => setFaultInjection(event.target.checked)));
 subscribe(render);
 render();
