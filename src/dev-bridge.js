@@ -38,7 +38,7 @@ export function installDevBridge({ id, title, modules }, {
   fetch: fetchSource = globalThis.fetch,
   MessageChannel: Channel = globalThis.MessageChannel,
   viewerOrigin = VIEWER_ORIGIN,
-  offerTimeoutMs = 30000,
+  offerTimeoutMs = 300000,
 } = {}) {
   if (!owner || owner.parent === owner || new URLSearchParams(owner.location.search).get('devBridge') !== '1') return () => {};
   let editOrigin;
