@@ -238,6 +238,27 @@ test('pending discovery offers are bounded without closing the active owner', as
   assert.deepEqual((await owner.rpc('ping')).result, { alive: true, claimed: true });
 });
 
+test('repeated discovery probes preserve the first channel while a new nonce offers a fresh session', async t => {
+  const host = mount(t);
+  const viewer = host.viewer();
+  host.owner.probe(viewer.source);
+  const original = viewer.offers[0];
+  for (let n = 0; n < 12; n++) host.owner.probe(viewer.source);
+  assert.equal(viewer.offers.length, 1);
+  assert.deepEqual((await original.rpc('claim')).result, { claimed: true });
+  host.owner.probe(viewer.source);
+  assert.equal(viewer.offers.length, 1);
+
+  host.owner.probe(viewer.source, { data: { type: 'edit-app-bridge:probe', version: 1, nonce: 'new-discovery-nonce' } });
+  assert.equal(viewer.offers.length, 2);
+  const fresh = viewer.offers[1];
+  assert.notEqual(fresh.message.session, original.message.session);
+  assert.equal(fresh.message.instance, original.message.instance);
+  assert.match((await fresh.rpc('claim')).error.message, /already claimed/);
+  assert.deepEqual((await call(original, 'addTask')).result, { status: 'open' });
+  assert.deepEqual((await original.rpc('ping')).result, { alive: true, claimed: true });
+});
+
 test('an explicitly configured second-server origin is allowed without a preview-domain wildcard', t => {
   const peer = 'https://listener-specific.edit-test.foo';
   const host = mount(t, { viewerOrigin: peer });

@@ -73,12 +73,15 @@ export function installDevBridge({ id, title, modules }, {
     offer.port.close();
   }
   function createOffer(event) {
+    // Startup retries share a nonce; a transferred port must be offered only once.
+    if ([...offers.values()].some(offer => offer.source === event.source && offer.nonce === event.data.nonce)) return;
     // Discovery never changes active ownership, even when the same viewer probes again.
     const pending = [...offers.values()].filter(offer => active !== offer);
     if (pending.length >= MAX_OFFERS) close(pending[0], 'The discovery offer was superseded.');
     const channel = new Channel();
     const offer = {
       session: owner.crypto.randomUUID(), port: channel.port1, closed: false,
+      source: event.source, nonce: event.data.nonce,
       queued: 0, work: Promise.resolve(), abort: new AbortController(),
     };
     const live = () => !disposed && !offer.closed && offers.get(offer.session) === offer;
