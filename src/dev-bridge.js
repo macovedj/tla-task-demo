@@ -37,10 +37,12 @@ export function installDevBridge({ id, title, modules }, {
   window: owner = globalThis.window,
   fetch: fetchSource = globalThis.fetch,
   MessageChannel: Channel = globalThis.MessageChannel,
+  enabled = false,
   viewerOrigin = VIEWER_ORIGIN,
   offerTimeoutMs = 300000,
 } = {}) {
-  if (!owner || owner.parent === owner || new URLSearchParams(owner.location.search).get('devBridge') !== '1') return () => {};
+  if (typeof enabled !== 'boolean') throw new TypeError('The development bridge enabled option must be a boolean.');
+  if (!owner || owner.parent === owner || (!enabled && new URLSearchParams(owner.location.search).get('devBridge') !== '1')) return () => {};
   let editOrigin;
   try { editOrigin = new URL(owner.document.referrer).origin; } catch { return () => {}; }
   if (!EDIT_ORIGINS.has(editOrigin) || !/^https?:\/\//.test(owner.location.origin)) return () => {};

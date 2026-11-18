@@ -37,13 +37,15 @@ function receive(port, predicate) {
     port.start();
   });
 }
-function mount(t, { functions = actualFunctions, fetch, offerTimeoutMs, viewerOrigin = VIEWER, ...windowOptions } = {}) {
+function mount(t, { functions = actualFunctions, fetch, offerTimeoutMs, viewerOrigin = VIEWER, enabled, unframed = false, ...windowOptions } = {}) {
   const owner = new FakeWindow(windowOptions);
+  if (unframed) owner.parent = owner;
   const fetches = [];
   const dispose = installDevBridge({ id: 'one-task', title: 'One Task', modules: { [FILE]: functions } }, {
     window: owner,
     MessageChannel,
     viewerOrigin,
+    ...(enabled === undefined ? {} : { enabled }),
     fetch: fetch || (async (url, options) => { fetches.push({ url, options }); return { ok: true, text: async () => '// Registered source' }; }),
     ...(offerTimeoutMs === undefined ? {} : { offerTimeoutMs }),
   });
@@ -94,6 +96,43 @@ test('registration is opt-in and accepts only a permitted sibling under an Edit 
   assert.equal(viewer.offers.length, 1);
   assert.deepEqual(viewer.offers[0].message.modules, [{ file: FILE, functions: Object.keys(actualFunctions) }]);
   assert.equal(Object.hasOwn(viewer.offers[0].message, 'model'), false);
+});
+
+test('explicit developer opt-in survives an unflagged Edit preview reopen but requires a new claim', async t => {
+  const first = mount(t, { search: '', enabled: true });
+  const original = first.discover();
+  assert.ok(original);
+  await original.rpc('claim');
+  await call(original, 'addTask');
+  first.dispose();
+
+  const reopened = mount(t, { search: '', enabled: true }).discover();
+  assert.ok(reopened);
+  assert.match((await call(reopened, 'reset')).error.message, /Claim this app/);
+  assert.deepEqual((await reopened.rpc('claim')).result, { claimed: true });
+  assert.deepEqual((await call(reopened, 'reset')).result, { status: 'absent' });
+});
+
+test('explicit opt-in preserves standalone, Edit-parent, and peer boundaries', t => {
+  for (const options of [{ unframed: true }, { referrer: '' }, { referrer: 'https://unrelated.example/' }]) {
+    const host = mount(t, { search: '', enabled: true, ...options });
+    const viewer = host.viewer();
+    host.owner.probe(viewer.source);
+    assert.equal(viewer.offers.length, 0);
+  }
+  const enabled = mount(t, { search: '', enabled: true });
+  const viewer = enabled.viewer();
+  enabled.owner.probe(viewer.source, { origin: 'https://unrelated.example' });
+  enabled.owner.probe({ ...viewer.source, parent: {} });
+  assert.equal(viewer.offers.length, 0);
+});
+
+test('the generic SDK retains its default query opt-in and validates explicit enablement', t => {
+  const disabled = mount(t, { search: '' });
+  assert.equal(disabled.discover(), undefined);
+  const queryEnabled = mount(t, { enabled: false });
+  assert.ok(queryEnabled.discover());
+  for (const enabled of [1, 'true', null]) assert.throws(() => mount(t, { enabled }), /must be a boolean/);
 });
 
 test('only a claimed connection calls the same functions as the ordinary application', async t => {

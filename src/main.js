@@ -3,13 +3,11 @@ import { installDevBridge } from './dev-bridge.js';
 
 // Ordinary app functions are shared by the UI and an optional development tool.
 const actionHandlers = { Add: addTask, Complete: completeTask, Reopen: reopenTask, Delete: deleteTask };
-if (new URLSearchParams(location.search).get('devBridge') === '1') {
-  installDevBridge({
-    id: 'one-task',
-    title: 'One Task',
-    modules: { 'src/task-app.js': { addTask, completeTask, reopenTask, deleteTask, observe, reset } },
-  });
-}
+installDevBridge({
+  id: 'one-task',
+  title: 'One Task',
+  modules: { 'src/task-app.js': { addTask, completeTask, reopenTask, deleteTask, observe, reset } },
+}, { enabled: true });
 
 const $ = id => document.getElementById(id);
 const buttons = [...document.querySelectorAll('[data-action]')];

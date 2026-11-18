@@ -16,7 +16,7 @@ npm test
 
 ## Connect the existing TLA+ viewer
 
-Open the app preview with `?devBridge=1` to enable its optional development bridge. Open the existing TLA+ State Explorer in a second browser pane in the same Edit project. The viewer can be hosted separately or run as a separate tool in the project; its code does not belong in the application.
+Open the ordinary app preview (`index.html`) in Edit, then open the existing TLA+ State Explorer in a second browser pane in the same project. The demo's registration in `src/main.js` explicitly enables its development bridge in Edit, so it remains discoverable after reopening the project without a URL flag. The viewer can be hosted separately or run as a separate tool in the project; its code does not belong in the application.
 
 In the viewer, choose **Open files → One Task**, open **Application**, discover the running app, and review these mappings before attaching:
 
@@ -31,7 +31,9 @@ In the viewer, choose **Open files → One Task**, open **Application**, discove
 
 The viewer owns these mappings and compares real observations with model states. Rewinding resets the app and replays the selected prefix. Enable **Break Complete** in the app to see a mismatch: the model expects `done`, but the running app remains `open`.
 
-`src/dev-bridge.js` exposes only registered live function references through a dedicated message channel. It does not evaluate source code, import a new application instance, or receive expected model states. It is inactive without the query flag. Reloading either preview requires reconnecting.
+`src/dev-bridge.js` exposes only registered live function references through a dedicated message channel. It does not evaluate source code, import a new application instance, or receive expected model states. The demo opts in with `{ enabled: true }`; other apps using the SDK remain inactive by default unless they explicitly enable it or use `?devBridge=1`. It stays inactive outside an Edit iframe, and only a verified sibling viewer can connect.
+
+After reloading, the viewer asks you to discover and confirm **Attach** again. Choose **Continue with model only** when you want to explore the specification without controlling the app.
 
 The sample `model/Task.tla` and `.cfg` are reference files. The app never loads them.
 
